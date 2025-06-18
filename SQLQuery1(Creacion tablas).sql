@@ -74,10 +74,11 @@ CREATE TABLE IF NOT EXISTS ventas (
     usuario_id BIGINT UNSIGNED NOT NULL,
     numero_factura VARCHAR(255) NOT NULL UNIQUE,
     monto_total DECIMAL(10,2) NOT NULL,
-    fecha DATETIME NOT NULL,
     monto_descuento DECIMAL(10,2) NOT NULL DEFAULT 0,
     total_con_iva DECIMAL(10,2) NOT NULL,
-    estado_pago ENUM('PENDIENTE', 'PAGADO', 'CANCELADO', 'REEMBOLSADO') NOT NULL DEFAULT 'PENDIENTE',
+    fecha DATETIME NOT NULL,
+    metodo_pago ENUM('EFECTIVO', 'TARJETA_CREDITO', 'TARJETA_DEBITO', 'TRANSFERENCIA', 'OTRO') NOT NULL DEFAULT 'EFECTIVO',
+    observaciones TEXT,
     FOREIGN KEY (cliente_id) REFERENCES clientes(id),
     FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -100,16 +101,6 @@ CREATE TABLE IF NOT EXISTS compras (
     cantidad INT UNSIGNED NOT NULL,
     fecha_transaccion DATETIME NOT NULL,
     FOREIGN KEY (producto_id) REFERENCES productos(id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-CREATE TABLE IF NOT EXISTS pagos (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    venta_id BIGINT UNSIGNED NOT NULL,
-    fecha DATE NOT NULL,
-    metodo_pago ENUM('EFECTIVO', 'TARJETA_CREDITO', 'TARJETA_DEBITO', 'TRANSFERENCIA', 'OTRO') NOT NULL DEFAULT 'EFECTIVO',
-    monto DECIMAL(10,2) NOT NULL,
-    observaciones TEXT,
-    FOREIGN KEY (venta_id) REFERENCES ventas(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ========================================

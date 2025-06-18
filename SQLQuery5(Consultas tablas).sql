@@ -86,10 +86,18 @@ GROUP BY p.id
 ORDER BY total_vendidos DESC
 LIMIT 10;
 
--- Pagos de una venta
-SELECT p.fecha, p.metodo_pago, p.monto, p.observaciones
-FROM pagos p
-WHERE p.venta_id = 1;
+-- Pagos de una venta (datos ahora en la tabla ventas)
+SELECT
+    v.id,
+    v.numero_factura,
+    v.fecha,
+    v.metodo_pago,
+    v.monto_total,
+    v.monto_descuento,
+    v.total_con_iva,
+    v.observaciones
+FROM ventas v
+WHERE v.id = 1;
 
 -- Todas las compras realizadas
 SELECT c.id, p.nombre AS producto, c.cantidad, c.monto_total, c.fecha_transaccion
@@ -110,7 +118,6 @@ LIMIT 50;
 
 -- Auditorías por tabla
 SELECT * FROM auditoria WHERE tabla_afectada = 'productos';
-
 
 -- ========================================
 -- CONSULTAS AVANZADAS PARA STOCKMATE

@@ -3,6 +3,8 @@
 -- Activan triggers de auditoría y stock
 -- ============================================
 
+use stockmate;
+
 -- 1. Roles
 INSERT INTO roles (nombre) VALUES 
 ('Administrador'),
@@ -22,10 +24,11 @@ INSERT INTO permisos (nombre) VALUES
 -- 3. Usuarios
 INSERT INTO usuarios (nombre, correo, contrasena, estado) VALUES
 ('Admin Principal', 'admin@stockmate.com', SHA2('admin123', 256), 'ACTIVO'),
-('Juan Pérez', 'juan@stockmate.com', SHA2('ventas123', 256), 'ACTIVO'),
-('Ana Torres', 'ana@stockmate.com', SHA2('almacen123', 256), 'ACTIVO'),
-('Carlos Ruiz', 'carlos@stockmate.com', SHA2('admin456', 256), 'ACTIVO'),
-('Laura Gómez', 'laura@stockmate.com', SHA2('ventas456', 256), 'ACTIVO');
+('Derek Cagua', 'derek@stockmate.com', SHA2('derek123', 256), 'ACTIVO'),
+('Omar Mite', 'omar@stockmate.com', SHA2('omar123', 256), 'ACTIVO'),
+('Clarissa Centeno', 'clarissa@stockmate.com', SHA2('clarissa123', 256), 'ACTIVO'),
+('Alexander Cruz', 'alexander@stockmate.com', SHA2('alexander123', 256), 'ACTIVO'),
+('Jefferson Guashpa', 'jefferson@stockmate.com', SHA2('jefferson123', 256), 'ACTIVO');
 
 -- 4. usuario_rol
 INSERT INTO usuario_rol (usuario_id, rol_id) VALUES
@@ -62,15 +65,31 @@ INSERT INTO clientes (nombre, correo, telefono, direccion) VALUES
 ('Luis Castillo', 'luis.castillo@yahoo.com', '0911122233', 'Guayaquil Centro'),
 ('Empresa XYZ', 'contacto@xyz.com', '0998877665', 'Av. Empresarial 777'),
 ('Colegio Santa Fe', 'info@santafe.edu.ec', '0955566778', 'Machala'),
-('Patricia Jara', 'paty.jara@hotmail.com', '0933344556', 'Cuenca Sur');
+('Patricia Jara', 'paty.jara@hotmail.com', '0933344556', 'Cuenca Sur'),
+('Quique Saldaña Borrego', 'rmartorell@aguilera.es', '7902245254', 'Badajoz'),
+('Rosendo Puente Carrera', 'huguetandres-felipe@chaves.net', '2975349128', 'Melilla');
 
 -- 9. Productos (5)
-INSERT INTO productos (categoria_id, proveedor_id, nombre, descripcion, precio_compra, precio_venta, stock_actual, stock_minimo, ruta_imagen) VALUES
-(1, 1, 'Cuaderno A4', 'Cuaderno grande rayado 100 hojas', 1.20, 2.00, 100, 20, 'img/cuaderno_a4.jpg'),
-(3, 3, 'Lápiz de carbón', 'Lápiz escolar HB', 0.10, 0.20, 500, 100, 'img/lapiz_hb.jpg'),
-(2, 5, 'Mouse inalámbrico', 'Mouse óptico USB 2.4GHz', 6.00, 9.00, 50, 10, 'img/mouse_wireless.jpg'),
-(4, 2, 'Resma de papel', 'Papel tamaño carta 500 hojas', 3.50, 5.00, 80, 15, 'img/resma_papel.jpg'),
-(5, 4, 'Marcadores color', 'Set de 6 marcadores punta fina', 1.80, 3.50, 60, 10, 'img/marcadores_color.jpg');
+INSERT INTO productos (categoria_id, proveedor_id, nombre, descripcion, precio_compra, precio_venta, stock_minimo) VALUES
+(1, 1, 'Cuaderno A4', 'Cuaderno grande rayado 100 hojas', 1.20, 2.00, 20),
+(3, 3, 'Lápiz de carbón', 'Lápiz escolar HB', 0.10, 0.20, 100),
+(2, 5, 'Mouse inalámbrico', 'Mouse óptico USB 2.4GHz', 6.00, 9.00, 10),
+(4, 2, 'Resma de papel', 'Papel tamaño carta 500 hojas', 3.50, 5.00, 15),
+(5, 4, 'Marcadores color', 'Set de 6 marcadores punta fina', 1.80, 3.50, 10),
+(3, 5, 'Bolígrafo azul', 'Voluptatem debitis itaque hic harum eum.', 12.78, 19.17, 20),
+(4, 3, 'Regla de 30cm', 'Alias labore eveniet nesciunt.', 7.56, 11.34, 10),
+(1, 2, 'Cuaderno universitario', 'Cuaderno de espiral 200 hojas', 2.00, 3.50, 15),
+(2, 1, 'Teclado mecánico', 'Teclado USB con retroiluminación LED', 15.00, 25.00, 5),
+(5, 2, 'Pintura acrílica', 'Set de 12 colores en tubo', 4.50, 7.80, 8),
+(1, 3, 'Agenda 2025', 'Agenda ejecutiva con calendario y contactos', 2.70, 4.50, 10),
+(3, 4, 'Tijeras escolares', 'Tijeras punta roma para niños', 0.90, 1.50, 30),
+(3, 4, 'Goma de borrar', 'Goma blanca rectangular no tóxica', 0.15, 0.30, 50),
+(2, 3, 'USB 32GB', 'Memoria USB 3.0 Kingston', 5.00, 8.50, 10),
+(4, 2, 'Papel bond A4', 'Paquete de 500 hojas blancas', 4.00, 6.00, 20),
+(5, 1, 'Colores Prismacolor', 'Set de 24 lápices de colores profesionales', 8.00, 13.00, 5),
+(5, 5, 'Pinceles variados', 'Set de 5 pinceles para pintura acrílica', 1.20, 2.50, 10),
+(3, 1, 'Sacapuntas doble', 'Sacapuntas plástico con depósito', 0.35, 0.60, 25),
+(1, 5, 'Block de notas', 'Block adhesivo de colores surtidos', 0.90, 1.50, 20);
 
 -- 10. Compras (5)
 INSERT INTO compras (producto_id, monto_total, cantidad, fecha_transaccion) VALUES
@@ -78,17 +97,24 @@ INSERT INTO compras (producto_id, monto_total, cantidad, fecha_transaccion) VALU
 (2, 50.00, 500, NOW()),
 (3, 300.00, 50, NOW()),
 (4, 280.00, 80, NOW()),
-(5, 108.00, 60, NOW());
+(5, 108.00, 60, NOW()),
+(6, 94.6, 55, NOW()),
+(7, 53.94, 87, NOW());
 
 -- 11. Ventas (5)
-INSERT INTO ventas (cliente_id, usuario_id, numero_factura, monto_total, fecha, monto_descuento, total_con_iva, estado_pago) VALUES
-(1, 2, 'FAC-1001', 20.00, NOW(), 0, 22.40, 'PAGADO'),
-(2, 2, 'FAC-1002', 45.00, NOW(), 5.00, 44.80, 'PAGADO'),
-(3, 5, 'FAC-1003', 60.00, NOW(), 0, 67.20, 'PAGADO'),
-(4, 2, 'FAC-1004', 15.00, NOW(), 0, 16.80, 'PENDIENTE'),
-(5, 5, 'FAC-1005', 32.00, NOW(), 2.00, 33.60, 'PAGADO');
+INSERT INTO ventas 
+(cliente_id, usuario_id, numero_factura, monto_total, monto_descuento, total_con_iva, fecha, metodo_pago, observaciones) 
+VALUES
+(1, 2, 'FAC-1001', 20.00, 0.00, 22.40, NOW(), 'EFECTIVO', 'Pago exacto'),
+(2, 2, 'FAC-1002', 45.00, 5.00, 44.80, NOW(), 'TRANSFERENCIA', 'Transferencia desde Banco Pichincha'),
+(3, 5, 'FAC-1003', 60.00, 0.00, 67.20, NOW(), 'TARJETA_CREDITO', 'Pagó con tarjeta Visa'),
+(4, 2, 'FAC-1004', 15.00, 0.00, 16.80, NOW(), 'EFECTIVO', 'Abono inicial'),
+(5, 5, 'FAC-1005', 32.00, 2.00, 33.60, NOW(), 'EFECTIVO', 'Pago completo'),
+(2, 2, 'FAC-1006', 24.15, 9.27, 16.67, NOW(), 'EFECTIVO', 'Pago adicional'),
+(4, 2, 'FAC-1007', 60.32, 8.86, 57.64, NOW(), 'EFECTIVO', 'Pago adicional');
 
--- 12. Detalles de venta (10 en total, 2 por venta)
+
+-- 12. Detalles de venta (12 en total, 2 por venta)
 INSERT INTO detalles_venta (venta_id, producto_id, cantidad, precio_unitario, precio_total) VALUES
 (1, 1, 5, 2.00, 10.00),
 (1, 2, 50, 0.20, 10.00),
@@ -102,14 +128,7 @@ INSERT INTO detalles_venta (venta_id, producto_id, cantidad, precio_unitario, pr
 (4, 1, 5, 2.00, 10.00),
 
 (5, 5, 5, 3.50, 17.50),
-(5, 2, 30, 0.20, 6.00);
+(5, 2, 30, 0.20, 6.00),
 
--- 13. Pagos (5)
-INSERT INTO pagos (venta_id, fecha, metodo_pago, monto, observaciones) VALUES
-  (1, CURDATE(), 'EFECTIVO', 22.40, 'Pago exacto'),
-  (2, CURDATE(), 'TRANSFERENCIA', 44.80, 'Transferencia desde Banco Pichincha'),
-  (3, CURDATE(), 'TARJETA_CREDITO', 67.20, 'Pagó con tarjeta Visa'),
-  (4, CURDATE(), 'EFECTIVO', 10.00, 'Abono inicial'),
-  (5, CURDATE(), 'EFECTIVO', 33.60, 'Pago completo');
-
-
+(6, 5, 1, 2.58, 2.58),
+(6, 2, 2, 12.05, 24.1);
