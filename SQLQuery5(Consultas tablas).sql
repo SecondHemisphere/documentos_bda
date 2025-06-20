@@ -1,9 +1,19 @@
 -- Usar la base de datos
 USE stockmate;
 
+-- ========================================
+-- CONSULTAS SIMPLES
+-- ========================================
+
 -- Listar productos con categoría y proveedor
-SELECT p.id, p.nombre, p.descripcion, p.precio_venta, p.stock_actual,
-       c.nombre AS categoria, pr.nombre AS proveedor
+SELECT 
+  p.id, 
+  p.nombre, 
+  p.descripcion, 
+  p.precio_venta, 
+  p.stock_actual,
+  c.nombre AS categoria, 
+  pr.nombre AS proveedor
 FROM productos p
 LEFT JOIN categorias c ON p.categoria_id = c.id
 LEFT JOIN proveedores pr ON p.proveedor_id = pr.id
@@ -29,7 +39,7 @@ GROUP BY c.id;
 -- Listar proveedores activos
 SELECT * FROM proveedores WHERE estado = 'ACTIVO';
 
--- Ver productos por proveedor
+-- Ver productos por proveedor (proveedor activo)
 SELECT pr.nombre AS proveedor, p.nombre AS producto
 FROM productos p
 JOIN proveedores pr ON p.proveedor_id = pr.id
@@ -105,22 +115,8 @@ FROM compras c
 JOIN productos p ON c.producto_id = p.id
 ORDER BY c.fecha_transaccion DESC;
 
--- Insertar una auditoría manual
-INSERT INTO auditoria (usuario_id, tabla_afectada, id_registro_afectado, accion, descripcion)
-VALUES (1, 'productos', 45, 'UPDATE', 'Actualizado stock_actual de 20 a 30');
-
--- Auditorías recientes
-SELECT a.id, u.nombre AS usuario, a.tabla_afectada, a.accion, a.descripcion, a.fecha
-FROM auditoria a
-LEFT JOIN usuarios u ON a.usuario_id = u.id
-ORDER BY a.fecha DESC
-LIMIT 50;
-
--- Auditorías por tabla
-SELECT * FROM auditoria WHERE tabla_afectada = 'productos';
-
 -- ========================================
--- CONSULTAS AVANZADAS PARA STOCKMATE
+-- CONSULTAS AVANZADAS
 -- ========================================
 
 -- 1. Productos con mejor rotación (más vendidos en relación a su stock actual)
@@ -180,25 +176,16 @@ GROUP BY p.id;
 -- 6. Relación ventas vs compras por producto
 SELECT 
   p.nombre,
-  SUM(dv.cantidad) AS vendidos,
-  SUM(c.cantidad) AS comprados,
-  ROUND(SUM(dv.cantidad) / GREATEST(SUM(c.cantidad), 1), 2) AS proporcion_venta_compra
+  COALESCE(SUM(dv.cantidad),0) AS vendidos,
+  COALESCE(SUM(c.cantidad),0) AS comprados,
+  ROUND(COALESCE(SUM(dv.cantidad),0) / GREATEST(COALESCE(SUM(c.cantidad),0), 1), 2) AS proporcion_venta_compra
 FROM productos p
 LEFT JOIN detalles_venta dv ON dv.producto_id = p.id
 LEFT JOIN compras c ON c.producto_id = p.id
 GROUP BY p.id
 ORDER BY proporcion_venta_compra DESC;
 
--- 7. Usuarios que más auditorías generan
-SELECT 
-  u.nombre,
-  COUNT(a.id) AS total_acciones
-FROM auditoria a
-JOIN usuarios u ON a.usuario_id = u.id
-GROUP BY u.id
-ORDER BY total_acciones DESC;
-
--- 8. Clientes inactivos (sin compras recientes)
+-- 7. Clientes inactivos (sin compras recientes)
 SELECT 
   c.id,
   c.nombre,
@@ -209,7 +196,7 @@ GROUP BY c.id
 HAVING ultima_compra IS NULL OR ultima_compra < CURDATE() - INTERVAL 60 DAY
 ORDER BY ultima_compra ASC;
 
--- 9. Ingresos generados por cada categoría de productos
+-- 8. Ingresos generados por cada categoría de productos
 SELECT 
   cat.nombre AS categoria,
   ROUND(SUM(dv.precio_total), 2) AS ingresos_totales
@@ -219,7 +206,7 @@ JOIN categorias cat ON cat.id = p.categoria_id
 GROUP BY cat.id
 ORDER BY ingresos_totales DESC;
 
--- 10. Clientes que han comprado productos de más de 3 categorías distintas
+-- 9. Clientes que han comprado productos de más de 3 categorías distintas
 SELECT 
   c.nombre,
   COUNT(DISTINCT cat.id) AS categorias_distintas

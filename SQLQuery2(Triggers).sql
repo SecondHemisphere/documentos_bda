@@ -1,53 +1,10 @@
--- ================================================
--- TRIGGERS DEL SISTEMA STOCKMATE
--- ================================================
-
--- Establecer delimitador personalizado
 DELIMITER $$
 
--- ==========================================================
--- SECCIÓN 1: TRIGGERS DE AUDITORÍA PARA TABLA PRODUCTOS
--- ==========================================================
+-- ========================================
+-- TRIGGERS PARA VENTAS
+-- ========================================
 
--- Auditoría: INSERT en productos
-CREATE TRIGGER trg_audit_insert_producto
-AFTER INSERT ON productos
-FOR EACH ROW
-BEGIN
-  INSERT INTO auditoria (usuario_id, tabla_afectada, id_registro_afectado, accion, descripcion)
-  VALUES (NULL, 'productos', NEW.id, 'INSERT', CONCAT('Producto creado: ', NEW.nombre));
-END$$
-
--- Auditoría: UPDATE en productos
-CREATE TRIGGER trg_audit_update_producto
-AFTER UPDATE ON productos
-FOR EACH ROW
-BEGIN
-  IF OLD.nombre != NEW.nombre OR OLD.stock_actual != NEW.stock_actual THEN
-    INSERT INTO auditoria (usuario_id, tabla_afectada, id_registro_afectado, accion, descripcion)
-    VALUES (NULL, 'productos', NEW.id, 'UPDATE',
-      CONCAT('Producto actualizado: ',
-             IF(OLD.nombre != NEW.nombre, CONCAT('nombre de "', OLD.nombre, '" a "', NEW.nombre, '"'), ''),
-             IF(OLD.stock_actual != NEW.stock_actual, CONCAT(' | stock_actual de ', OLD.stock_actual, ' a ', NEW.stock_actual), '')
-      )
-    );
-  END IF;
-END$$
-
--- Auditoría: DELETE en productos
-CREATE TRIGGER trg_audit_delete_producto
-AFTER DELETE ON productos
-FOR EACH ROW
-BEGIN
-  INSERT INTO auditoria (usuario_id, tabla_afectada, id_registro_afectado, accion, descripcion)
-  VALUES (NULL, 'productos', OLD.id, 'DELETE', CONCAT('Producto eliminado: ', OLD.nombre));
-END$$
-
--- ========================================================
--- SECCIÓN 2: TRIGGERS PARA AJUSTE AUTOMÁTICO DE STOCK
--- ========================================================
-
--- Disminuir stock al realizar una venta
+-- 1. Disminuir stock al registrar una venta (detalle)
 CREATE TRIGGER trg_reducir_stock_venta
 AFTER INSERT ON detalles_venta
 FOR EACH ROW
@@ -57,7 +14,7 @@ BEGIN
   WHERE id = NEW.producto_id;
 END$$
 
--- Restaurar stock al eliminar una venta (detalle)
+-- 2. Restaurar stock al eliminar un detalle de venta
 CREATE TRIGGER trg_restaurar_stock_venta
 AFTER DELETE ON detalles_venta
 FOR EACH ROW
@@ -67,7 +24,107 @@ BEGIN
   WHERE id = OLD.producto_id;
 END$$
 
--- Aumentar stock al registrar una compra
+-- 3. Ajustar stock al actualizar un detalle de venta
+CREATE TRIGGER trg_actualizar_stock_venta
+AFTER UPDATE ON detalles_venta
+FOR EACH ROW
+BEGIN
+  -- Sumar la cantidad anterior
+  UPDATE productos
+  SET stock_actual = stock_actual + OLD.cantidad
+  WHERE id = OLD.producto_id;
+
+  -- Restar la nueva cantidad
+  UPDATE productos
+  SET stock_actual = stock_actual - NEW.cantidad
+  WHERE id = NEW.producto_id;
+END$$
+
+-- 4. Prevenir stock negativo en ventas
+CREATE TRIGGER trg_prevenir_stock_negativo
+BEFORE INSERT ON detalles_venta
+FOR EACH ROW
+BEGIN
+  DECLARE stock_disponible INT;
+
+  SELECT stock_actual INTO stock_disponible
+  FROM productos
+  WHERE id = NEW.producto_id;
+
+  IF stock_disponible < NEW.cantidad THEN
+    SIGNAL SQLSTATE '45000'
+    SET MESSAGE_TEXT = 'No hay suficiente stock disponible para realizar la venta.';
+  END IF;
+END$$
+
+-- 5. Actualizar totales de venta al insertar detalle
+CREATE TRIGGER trg_actualizar_totales_venta_after_insert
+AFTER INSERT ON detalles_venta
+FOR EACH ROW
+BEGIN
+  DECLARE total DECIMAL(10,2);
+  DECLARE descuento DECIMAL(10,2) DEFAULT 0;
+  DECLARE iva_rate DECIMAL(5,2) DEFAULT 0.12;
+
+  SELECT COALESCE(SUM(precio_total), 0)
+  INTO total
+  FROM detalles_venta
+  WHERE venta_id = NEW.venta_id;
+
+  UPDATE ventas
+  SET monto_total = total,
+      monto_descuento = descuento,
+      total_con_iva = (total - descuento) * (1 + iva_rate)
+  WHERE id = NEW.venta_id;
+END$$
+
+-- 6. Actualizar totales de venta al eliminar detalle
+CREATE TRIGGER trg_actualizar_totales_venta_after_delete
+AFTER DELETE ON detalles_venta
+FOR EACH ROW
+BEGIN
+  DECLARE total DECIMAL(10,2);
+  DECLARE descuento DECIMAL(10,2) DEFAULT 0;
+  DECLARE iva_rate DECIMAL(5,2) DEFAULT 0.12;
+
+  SELECT COALESCE(SUM(precio_total), 0)
+  INTO total
+  FROM detalles_venta
+  WHERE venta_id = OLD.venta_id;
+
+  UPDATE ventas
+  SET monto_total = total,
+      monto_descuento = descuento,
+      total_con_iva = (total - descuento) * (1 + iva_rate)
+  WHERE id = OLD.venta_id;
+END$$
+
+-- 7. Actualizar totales de venta al actualizar detalle
+CREATE TRIGGER trg_actualizar_totales_venta_after_update
+AFTER UPDATE ON detalles_venta
+FOR EACH ROW
+BEGIN
+  DECLARE total DECIMAL(10,2);
+  DECLARE descuento DECIMAL(10,2) DEFAULT 0;
+  DECLARE iva_rate DECIMAL(5,2) DEFAULT 0.12;
+
+  SELECT COALESCE(SUM(precio_total), 0)
+  INTO total
+  FROM detalles_venta
+  WHERE venta_id = NEW.venta_id;
+
+  UPDATE ventas
+  SET monto_total = total,
+      monto_descuento = descuento,
+      total_con_iva = (total - descuento) * (1 + iva_rate)
+  WHERE id = NEW.venta_id;
+END$$
+
+-- ========================================
+-- TRIGGERS PARA COMPRAS
+-- ========================================
+
+-- 8. Aumentar stock al registrar una compra
 CREATE TRIGGER trg_aumentar_stock_compra
 AFTER INSERT ON compras
 FOR EACH ROW
@@ -77,42 +134,30 @@ BEGIN
   WHERE id = NEW.producto_id;
 END$$
 
--- =====================================================
--- SECCIÓN 3: AUDITORÍA PARA VENTAS Y COMPRAS
--- =====================================================
-
--- Registrar auditoría al insertar una venta
-CREATE TRIGGER trg_audit_insert_venta
-AFTER INSERT ON ventas
+-- 9. Disminuir stock al eliminar una compra
+CREATE TRIGGER trg_disminuir_stock_eliminar_compra
+AFTER DELETE ON compras
 FOR EACH ROW
 BEGIN
-  INSERT INTO auditoria (usuario_id, tabla_afectada, id_registro_afectado, accion, descripcion)
-  VALUES (NEW.usuario_id, 'ventas', NEW.id, 'INSERT',
-          CONCAT('Nueva venta registrada con factura ', NEW.numero_factura));
+  UPDATE productos
+  SET stock_actual = stock_actual - OLD.cantidad
+  WHERE id = OLD.producto_id;
 END$$
 
--- Registrar auditoría al insertar una compra
-CREATE TRIGGER trg_audit_insert_compra
-AFTER INSERT ON compras
+-- 10. Ajustar stock al actualizar una compra
+CREATE TRIGGER trg_actualizar_stock_compra
+AFTER UPDATE ON compras
 FOR EACH ROW
 BEGIN
-  INSERT INTO auditoria (usuario_id, tabla_afectada, id_registro_afectado, accion, descripcion)
-  VALUES (NULL, 'compras', NEW.id, 'INSERT',
-          CONCAT('Compra registrada del producto ID ', NEW.producto_id, ', cantidad: ', NEW.cantidad));
+  -- Restar la cantidad anterior
+  UPDATE productos
+  SET stock_actual = stock_actual - OLD.cantidad
+  WHERE id = OLD.producto_id;
+
+  -- Sumar la nueva cantidad
+  UPDATE productos
+  SET stock_actual = stock_actual + NEW.cantidad
+  WHERE id = NEW.producto_id;
 END$$
 
--- =====================================================
--- SECCIÓN 4: AUDITORÍA PARA USUARIOS
--- =====================================================
-
--- Registrar auditoría al crear nuevo usuario
-CREATE TRIGGER trg_audit_insert_usuario
-AFTER INSERT ON usuarios
-FOR EACH ROW
-BEGIN
-  INSERT INTO auditoria (usuario_id, tabla_afectada, id_registro_afectado, accion, descripcion)
-  VALUES (NULL, 'usuarios', NEW.id, 'INSERT', CONCAT('Nuevo usuario creado: ', NEW.nombre));
-END$$
-
--- Restaurar delimitador por defecto
 DELIMITER ;

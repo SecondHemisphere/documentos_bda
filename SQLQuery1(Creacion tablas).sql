@@ -97,10 +97,12 @@ CREATE TABLE IF NOT EXISTS detalles_venta (
 CREATE TABLE IF NOT EXISTS compras (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     producto_id BIGINT UNSIGNED NOT NULL,
+    usuario_id BIGINT UNSIGNED NOT NULL,
     monto_total DECIMAL(10,2) NOT NULL,
     cantidad INT UNSIGNED NOT NULL,
     fecha_transaccion DATETIME NOT NULL,
-    FOREIGN KEY (producto_id) REFERENCES productos(id)
+    FOREIGN KEY (producto_id) REFERENCES productos(id),
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ========================================
@@ -131,19 +133,4 @@ CREATE TABLE IF NOT EXISTS rol_permiso (
     PRIMARY KEY (rol_id, permiso_id),
     FOREIGN KEY (rol_id) REFERENCES roles(id) ON DELETE CASCADE,
     FOREIGN KEY (permiso_id) REFERENCES permisos(id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- ========================================
--- TABLA DE AUDITORÍA
--- ========================================
-
-CREATE TABLE IF NOT EXISTS auditoria (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    usuario_id BIGINT UNSIGNED,
-    tabla_afectada VARCHAR(100) NOT NULL,
-    id_registro_afectado BIGINT NOT NULL,
-    accion ENUM('INSERT', 'UPDATE', 'DELETE') NOT NULL,
-    descripcion TEXT NOT NULL,
-    fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
