@@ -7,23 +7,92 @@ INSERT INTO roles (nombre) VALUES
 ('Almacenero');
 
 -- 2. Permisos
-INSERT INTO permisos (nombre) VALUES 
-('crear_producto'),
-('editar_producto'),
-('eliminar_producto'),
-('ver_ventas'),
-('registrar_compra'),
-('ver_stock'),
-('generar_reporte');
+INSERT INTO permisos (nombre) VALUES
+('usuarios.ver'),
+('usuarios.crear'),
+('usuarios.editar'),
+('usuarios.eliminar'),
+
+('roles.ver'),
+('roles.crear'),
+('roles.editar'),
+('roles.eliminar'),
+
+('categorias.ver'),
+('categorias.crear'),
+('categorias.editar'),
+('categorias.eliminar'),
+
+('productos.ver'),
+('productos.crear'),
+('productos.editar'),
+('productos.eliminar'),
+
+('proveedores.ver'),
+('proveedores.crear'),
+('proveedores.editar'),
+('proveedores.eliminar'),
+
+('clientes.ver'),
+('clientes.crear'),
+('clientes.editar'),
+('clientes.eliminar'),
+
+('compras.ver'),
+('compras.crear'),
+('compras.editar'),
+('compras.eliminar'),
+
+('ventas.ver'),
+('ventas.crear'),
+('ventas.editar'),
+('ventas.eliminar'),
+
+('reportes.ver');
 
 -- 3. Permisos por rol
+
+-- Administrador (id = 1)
+INSERT INTO rol_permiso (rol_id, permiso_id)
+SELECT 1, id FROM permisos;
+
+-- Vendedor (id = 2)
 INSERT INTO rol_permiso (rol_id, permiso_id) VALUES
--- Administrador
-(1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (1, 6), (1, 7),
--- Vendedor
-(2, 4), (2, 7),
--- Almacenero
-(3, 1), (3, 2), (3, 5), (3, 6);
+(2, (SELECT id FROM permisos WHERE nombre = 'clientes.ver')),
+(2, (SELECT id FROM permisos WHERE nombre = 'clientes.crear')),
+(2, (SELECT id FROM permisos WHERE nombre = 'clientes.editar')),
+(2, (SELECT id FROM permisos WHERE nombre = 'clientes.eliminar')),
+
+(2, (SELECT id FROM permisos WHERE nombre = 'ventas.ver')),
+(2, (SELECT id FROM permisos WHERE nombre = 'ventas.crear')),
+(2, (SELECT id FROM permisos WHERE nombre = 'ventas.editar')),
+(2, (SELECT id FROM permisos WHERE nombre = 'ventas.eliminar')),
+
+(2, (SELECT id FROM permisos WHERE nombre = 'reportes.ver'));
+
+-- Almacenero (id = 3)
+INSERT INTO rol_permiso (rol_id, permiso_id) VALUES
+(3, (SELECT id FROM permisos WHERE nombre = 'categorias.ver')),
+(3, (SELECT id FROM permisos WHERE nombre = 'categorias.crear')),
+(3, (SELECT id FROM permisos WHERE nombre = 'categorias.editar')),
+(3, (SELECT id FROM permisos WHERE nombre = 'categorias.eliminar')),
+
+(3, (SELECT id FROM permisos WHERE nombre = 'productos.ver')),
+(3, (SELECT id FROM permisos WHERE nombre = 'productos.crear')),
+(3, (SELECT id FROM permisos WHERE nombre = 'productos.editar')),
+(3, (SELECT id FROM permisos WHERE nombre = 'productos.eliminar')),
+
+(3, (SELECT id FROM permisos WHERE nombre = 'proveedores.ver')),
+(3, (SELECT id FROM permisos WHERE nombre = 'proveedores.crear')),
+(3, (SELECT id FROM permisos WHERE nombre = 'proveedores.editar')),
+(3, (SELECT id FROM permisos WHERE nombre = 'proveedores.eliminar')),
+
+(3, (SELECT id FROM permisos WHERE nombre = 'compras.ver')),
+(3, (SELECT id FROM permisos WHERE nombre = 'compras.crear')),
+(3, (SELECT id FROM permisos WHERE nombre = 'compras.editar')),
+(3, (SELECT id FROM permisos WHERE nombre = 'compras.eliminar')),
+
+(3, (SELECT id FROM permisos WHERE nombre = 'reportes.ver'));
 
 -- 4. Usuarios (con rol asignado directamente)
 INSERT INTO usuarios (nombre, correo, contrasena, rol_id, estado) VALUES
