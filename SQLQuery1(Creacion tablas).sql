@@ -13,6 +13,38 @@ USE stockmate;
 -- manualmente su inexistencia antes de ejecutar este bloque.
 
 -- ========================================
+-- TABLAS DE SEGURIDAD Y ROLES
+-- ========================================
+
+CREATE TABLE IF NOT EXISTS roles (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(50) NOT NULL UNIQUE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS permisos (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL UNIQUE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS rol_permiso (
+    rol_id BIGINT UNSIGNED NOT NULL,
+    permiso_id BIGINT UNSIGNED NOT NULL,
+    PRIMARY KEY (rol_id, permiso_id),
+    FOREIGN KEY (rol_id) REFERENCES roles(id) ON DELETE CASCADE,
+    FOREIGN KEY (permiso_id) REFERENCES permisos(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS usuarios (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(255) NOT NULL,
+    correo VARCHAR(255) NOT NULL UNIQUE,
+    contrasena VARCHAR(255) NOT NULL,
+    rol_id BIGINT UNSIGNED NOT NULL,
+    estado ENUM('ACTIVO', 'INACTIVO') DEFAULT 'ACTIVO',
+    FOREIGN KEY (rol_id) REFERENCES roles(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ========================================
 -- TABLAS GENERALES
 -- ========================================
 
@@ -28,14 +60,6 @@ CREATE TABLE IF NOT EXISTS proveedores (
     correo VARCHAR(255) UNIQUE,
     telefono VARCHAR(20),
     direccion TEXT,
-    estado ENUM('ACTIVO', 'INACTIVO') DEFAULT 'ACTIVO'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-CREATE TABLE IF NOT EXISTS usuarios (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    nombre VARCHAR(255) NOT NULL,
-    correo VARCHAR(255) NOT NULL UNIQUE,
-    contrasena VARCHAR(255) NOT NULL,
     estado ENUM('ACTIVO', 'INACTIVO') DEFAULT 'ACTIVO'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -103,34 +127,4 @@ CREATE TABLE IF NOT EXISTS compras (
     fecha_transaccion DATETIME NOT NULL,
     FOREIGN KEY (producto_id) REFERENCES productos(id),
     FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- ========================================
--- TABLAS DE SEGURIDAD Y ROLES
--- ========================================
-
-CREATE TABLE IF NOT EXISTS roles (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    nombre VARCHAR(50) NOT NULL UNIQUE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-CREATE TABLE IF NOT EXISTS permisos (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    nombre VARCHAR(100) NOT NULL UNIQUE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-CREATE TABLE IF NOT EXISTS usuario_rol (
-    usuario_id BIGINT UNSIGNED NOT NULL,
-    rol_id BIGINT UNSIGNED NOT NULL,
-    PRIMARY KEY (usuario_id, rol_id),
-    FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
-    FOREIGN KEY (rol_id) REFERENCES roles(id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-CREATE TABLE IF NOT EXISTS rol_permiso (
-    rol_id BIGINT UNSIGNED NOT NULL,
-    permiso_id BIGINT UNSIGNED NOT NULL,
-    PRIMARY KEY (rol_id, permiso_id),
-    FOREIGN KEY (rol_id) REFERENCES roles(id) ON DELETE CASCADE,
-    FOREIGN KEY (permiso_id) REFERENCES permisos(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

@@ -1,4 +1,3 @@
--- Usar la base de datos
 USE stockmate;
 
 -- ========================================
@@ -55,19 +54,21 @@ WHERE nombre LIKE '%perez%' OR correo LIKE '%gmail.com%';
 -- Ver todos los usuarios activos
 SELECT id, nombre, correo FROM usuarios WHERE estado = 'ACTIVO';
 
--- Ver roles de un usuario
-SELECT r.nombre AS rol
-FROM usuario_rol ur
-JOIN roles r ON ur.rol_id = r.id
-WHERE ur.usuario_id = 1;
-
--- Consultar permisos de un usuario
-SELECT u.nombre AS usuario, r.nombre AS rol, pe.nombre AS permiso
+-- Ver rol de un usuario (con modelo de 1 solo rol por usuario)
+SELECT u.nombre AS usuario, r.nombre AS rol
 FROM usuarios u
-JOIN usuario_rol ur ON u.id = ur.usuario_id
-JOIN roles r ON ur.rol_id = r.id
+JOIN roles r ON u.rol_id = r.id
+WHERE u.id = 1;
+
+-- Consultar permisos de un usuario (por su rol)
+SELECT 
+  u.nombre AS usuario, 
+  r.nombre AS rol, 
+  p.nombre AS permiso
+FROM usuarios u
+JOIN roles r ON u.rol_id = r.id
 JOIN rol_permiso rp ON r.id = rp.rol_id
-JOIN permisos pe ON rp.permiso_id = pe.id
+JOIN permisos p ON rp.permiso_id = p.id
 WHERE u.id = 1;
 
 -- Ventas del día actual
@@ -119,7 +120,7 @@ ORDER BY c.fecha_transaccion DESC;
 -- CONSULTAS AVANZADAS
 -- ========================================
 
--- 1. Productos con mejor rotación (más vendidos en relación a su stock actual)
+-- 1. Productos con mejor rotación
 SELECT 
   p.nombre,
   SUM(dv.cantidad) AS vendidos,
@@ -131,7 +132,7 @@ GROUP BY p.id
 ORDER BY rotacion DESC
 LIMIT 10;
 
--- 2. Proveedores más confiables (mayor número de compras con menor total unitario promedio)
+-- 2. Proveedores más confiables
 SELECT 
   pr.nombre AS proveedor,
   COUNT(c.id) AS compras,
@@ -176,9 +177,9 @@ GROUP BY p.id;
 -- 6. Relación ventas vs compras por producto
 SELECT 
   p.nombre,
-  COALESCE(SUM(dv.cantidad),0) AS vendidos,
-  COALESCE(SUM(c.cantidad),0) AS comprados,
-  ROUND(COALESCE(SUM(dv.cantidad),0) / GREATEST(COALESCE(SUM(c.cantidad),0), 1), 2) AS proporcion_venta_compra
+  COALESCE(SUM(dv.cantidad), 0) AS vendidos,
+  COALESCE(SUM(c.cantidad), 0) AS comprados,
+  ROUND(COALESCE(SUM(dv.cantidad), 0) / GREATEST(COALESCE(SUM(c.cantidad), 0), 1), 2) AS proporcion_venta_compra
 FROM productos p
 LEFT JOIN detalles_venta dv ON dv.producto_id = p.id
 LEFT JOIN compras c ON c.producto_id = p.id
@@ -196,7 +197,7 @@ GROUP BY c.id
 HAVING ultima_compra IS NULL OR ultima_compra < CURDATE() - INTERVAL 60 DAY
 ORDER BY ultima_compra ASC;
 
--- 8. Ingresos generados por cada categoría de productos
+-- 8. Ingresos generados por categoría
 SELECT 
   cat.nombre AS categoria,
   ROUND(SUM(dv.precio_total), 2) AS ingresos_totales
@@ -217,3 +218,4 @@ JOIN categorias cat ON cat.id = p.categoria_id
 JOIN clientes c ON c.id = v.cliente_id
 GROUP BY c.id
 HAVING categorias_distintas > 3;
+

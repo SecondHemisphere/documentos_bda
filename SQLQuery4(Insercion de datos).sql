@@ -16,26 +16,25 @@ INSERT INTO permisos (nombre) VALUES
 ('ver_stock'),
 ('generar_reporte');
 
--- 3. Usuarios
-INSERT INTO usuarios (nombre, correo, contrasena, estado) VALUES
-('Admin Principal', 'admin@stockmate.com', SHA2('admin123', 256), 'ACTIVO'),
-('Derek Cagua', 'derek@stockmate.com', SHA2('derek123', 256), 'ACTIVO'),
-('Omar Mite', 'omar@stockmate.com', SHA2('omar123', 256), 'ACTIVO'),
-('Clarissa Centeno', 'clarissa@stockmate.com', SHA2('clarissa123', 256), 'ACTIVO'),
-('Alexander Cruz', 'alexander@stockmate.com', SHA2('alexander123', 256), 'ACTIVO'),
-('Jefferson Guashpa', 'jefferson@stockmate.com', SHA2('jefferson123', 256), 'ACTIVO');
-
--- 4. usuario_rol
-INSERT INTO usuario_rol (usuario_id, rol_id) VALUES
-(1, 1), (2, 2), (3, 3), (4, 1), (5, 2);
-
--- 5. rol_permiso
+-- 3. Permisos por rol
 INSERT INTO rol_permiso (rol_id, permiso_id) VALUES
+-- Administrador
 (1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (1, 6), (1, 7),
+-- Vendedor
 (2, 4), (2, 7),
+-- Almacenero
 (3, 1), (3, 2), (3, 5), (3, 6);
 
--- 6. Categorías
+-- 4. Usuarios (con rol asignado directamente)
+INSERT INTO usuarios (nombre, correo, contrasena, rol_id, estado) VALUES
+('Admin Principal', 'admin@stockmate.com', SHA2('admin123', 256), 1, 'ACTIVO'),
+('Derek Cagua', 'derek@stockmate.com', SHA2('derek123', 256), 2, 'ACTIVO'),
+('Omar Mite', 'omar@stockmate.com', SHA2('omar123', 256), 2, 'ACTIVO'),
+('Clarissa Centeno', 'clarissa@stockmate.com', SHA2('clarissa123', 256), 3, 'ACTIVO'),
+('Alexander Cruz', 'alexander@stockmate.com', SHA2('alexander123', 256), 3, 'ACTIVO'),
+('Jefferson Guashpa', 'jefferson@stockmate.com', SHA2('jefferson123', 256), 3, 'ACTIVO');
+
+-- 5. Categorías
 INSERT INTO categorias (nombre) VALUES 
 ('Papelería General'),
 ('Útiles Escolares'),
@@ -45,7 +44,7 @@ INSERT INTO categorias (nombre) VALUES
 ('Limpieza y Mantenimiento'),
 ('Mobiliario y Ergonomía');
 
--- 7. Proveedores
+-- 6. Proveedores
 INSERT INTO proveedores (nombre, correo, telefono, direccion) VALUES
 ('Distribuidora Nacional', 'contacto@dn.com', '0991002001', 'Av. Central 123'),
 ('Importadora Office', 'ventas@office.com', '0987654321', 'Calle Comercio 45'),
@@ -68,7 +67,7 @@ INSERT INTO proveedores (nombre, correo, telefono, direccion) VALUES
 ('Accesorios TI', 'ventas@accesoristi.com', '0988888877', 'Tech Park'),
 ('Colores y Más', 'ventas@coloresymas.com', '0966666655', 'Av. Las Artes');
 
--- 8. Clientes
+-- 7. Clientes
 INSERT INTO clientes (nombre, correo, telefono, direccion) VALUES
 ('María López', 'maria.lopez@gmail.com', '0987651234', 'Quito Norte'),
 ('Luis Castillo', 'luis.castillo@yahoo.com', '0911122233', 'Guayaquil Centro'),
@@ -91,7 +90,7 @@ INSERT INTO clientes (nombre, correo, telefono, direccion) VALUES
 ('Escuela San José', 'info@sanjose.edu', '0955667788', 'Riobamba Oeste'),
 ('Papelería El Rincón', 'ventas@elrincon.com', '0988776655', 'Cuenca Norte');
 
--- 9. Productos (sin stock_actual, lo calculan los triggers)
+-- 8. Productos (sin stock_actual, lo calculan los triggers)
 INSERT INTO productos (categoria_id, proveedor_id, nombre, descripcion, precio_compra, precio_venta, stock_minimo) VALUES
 (1, 1, 'Cuaderno A4', 'Cuaderno grande rayado 100 hojas', 1.20, 2.00, 20),
 (2, 3, 'Lápiz de carbón', 'Lápiz escolar HB', 0.10, 0.20, 100),
@@ -114,7 +113,7 @@ INSERT INTO productos (categoria_id, proveedor_id, nombre, descripcion, precio_c
 (4, 19, 'Colores de madera', 'Caja de 12 colores escolares', 1.50, 2.80, 10),
 (1, 20, 'Agenda académica', 'Agenda escolar con calendario', 2.00, 3.50, 10);
 
--- 10. Compras
+-- 9. Compras
 INSERT INTO compras (producto_id, usuario_id, monto_total, cantidad, fecha_transaccion) VALUES
 -- Día 1 (hace 98 días)
 (1, 3, 120.00, 100, NOW() - INTERVAL 98 DAY),
@@ -186,7 +185,7 @@ INSERT INTO compras (producto_id, usuario_id, monto_total, cantidad, fecha_trans
 (1, 3, 120.00, 100, NOW() - INTERVAL 7 DAY),
 (2, 4, 25.00, 125, NOW() - INTERVAL 7 DAY);
 
--- 11. Ventas
+-- 10. Ventas
 INSERT INTO ventas 
 (cliente_id, usuario_id, numero_factura, monto_total, monto_descuento, total_con_iva, fecha, metodo_pago, observaciones) 
 VALUES
@@ -206,7 +205,7 @@ VALUES
 (7, 5, 'FAC-1014', 0, 0, 0, NOW() - INTERVAL 10 DAY, 'EFECTIVO', ''),
 (1, 6, 'FAC-1015', 0, 0, 0, NOW() - INTERVAL 5 DAY, 'TRANSFERENCIA', '');
 
--- 12. Detalles de venta
+-- 11. Detalles de venta
 INSERT INTO detalles_venta (venta_id, producto_id, cantidad, precio_unitario, precio_total) VALUES
 -- Venta 1 (3 productos)
 (1, 1, 5, 2.00, 10.00),
