@@ -100,10 +100,11 @@ SELECT
     ROUND(c.monto_total / c.cantidad, 2) AS precio_unitario,
     ROUND(c.monto_total, 2) AS precio_total,
     pr.nombre AS relacionado, -- proveedor
-    NULL AS usuario_nombre
+    u.nombre AS usuario_nombre
 
 FROM compras c
 JOIN productos p ON p.id = c.producto_id
+JOIN usuarios u ON c.usuario_id = u.id
 LEFT JOIN proveedores pr ON p.proveedor_id = pr.id
 
 UNION ALL
