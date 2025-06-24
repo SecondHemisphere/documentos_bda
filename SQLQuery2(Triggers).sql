@@ -101,20 +101,29 @@ CREATE TRIGGER trg_actualizar_totales_venta_after_insert
 AFTER INSERT ON detalles_venta
 FOR EACH ROW
 BEGIN
-  DECLARE total DECIMAL(10,2);
-  DECLARE descuento DECIMAL(10,2) DEFAULT 0;
-  DECLARE iva_rate DECIMAL(5,2) DEFAULT 0.12;
+    DECLARE v_subtotal_sin_descuento DECIMAL(10,2);
+    DECLARE v_porcentaje_desc_venta TINYINT;
+    DECLARE v_monto_desc_calculado DECIMAL(10,2);
+    DECLARE v_tasa_iva DECIMAL(5,2) DEFAULT 0.15;
 
-  SELECT COALESCE(SUM(precio_total), 0)
-  INTO total
-  FROM detalles_venta
-  WHERE venta_id = NEW.venta_id;
+    SELECT COALESCE(SUM(precio_total), 0)
+    INTO v_subtotal_sin_descuento
+    FROM detalles_venta
+    WHERE venta_id = NEW.venta_id;
 
-  UPDATE ventas
-  SET monto_total = total,
-      monto_descuento = descuento,
-      total_con_iva = (total - descuento) * (1 + iva_rate)
-  WHERE id = NEW.venta_id;
+    SELECT porcentaje_descuento
+    INTO v_porcentaje_desc_venta
+    FROM ventas
+    WHERE id = NEW.venta_id;
+
+    SET v_monto_desc_calculado = v_subtotal_sin_descuento * (v_porcentaje_desc_venta / 100);
+
+    UPDATE ventas
+    SET
+        monto_total = v_subtotal_sin_descuento,
+        monto_descuento = v_monto_desc_calculado,
+        total_con_iva = (v_subtotal_sin_descuento - v_monto_desc_calculado) * (1 + v_tasa_iva)
+    WHERE id = NEW.venta_id;
 END$$
 
 -- 6. Actualizar totales de venta al eliminar detalle
@@ -122,20 +131,29 @@ CREATE TRIGGER trg_actualizar_totales_venta_after_delete
 AFTER DELETE ON detalles_venta
 FOR EACH ROW
 BEGIN
-  DECLARE total DECIMAL(10,2);
-  DECLARE descuento DECIMAL(10,2) DEFAULT 0;
-  DECLARE iva_rate DECIMAL(5,2) DEFAULT 0.12;
+    DECLARE v_subtotal_sin_descuento DECIMAL(10,2);
+    DECLARE v_porcentaje_desc_venta TINYINT;
+    DECLARE v_monto_desc_calculado DECIMAL(10,2);
+    DECLARE v_tasa_iva DECIMAL(5,2) DEFAULT 0.15;
 
-  SELECT COALESCE(SUM(precio_total), 0)
-  INTO total
-  FROM detalles_venta
-  WHERE venta_id = OLD.venta_id;
+    SELECT COALESCE(SUM(precio_total), 0)
+    INTO v_subtotal_sin_descuento
+    FROM detalles_venta
+    WHERE venta_id = OLD.venta_id;
 
-  UPDATE ventas
-  SET monto_total = total,
-      monto_descuento = descuento,
-      total_con_iva = (total - descuento) * (1 + iva_rate)
-  WHERE id = OLD.venta_id;
+    SELECT porcentaje_descuento
+    INTO v_porcentaje_desc_venta
+    FROM ventas
+    WHERE id = OLD.venta_id;
+
+    SET v_monto_desc_calculado = v_subtotal_sin_descuento * (v_porcentaje_desc_venta / 100);
+
+    UPDATE ventas
+    SET
+        monto_total = v_subtotal_sin_descuento,
+        monto_descuento = v_monto_desc_calculado,
+        total_con_iva = (v_subtotal_sin_descuento - v_monto_desc_calculado) * (1 + v_tasa_iva)
+    WHERE id = OLD.venta_id;
 END$$
 
 -- 7. Actualizar totales de venta al actualizar detalle
@@ -143,20 +161,52 @@ CREATE TRIGGER trg_actualizar_totales_venta_after_update
 AFTER UPDATE ON detalles_venta
 FOR EACH ROW
 BEGIN
-  DECLARE total DECIMAL(10,2);
-  DECLARE descuento DECIMAL(10,2) DEFAULT 0;
-  DECLARE iva_rate DECIMAL(5,2) DEFAULT 0.12;
+    DECLARE v_subtotal_sin_descuento DECIMAL(10,2);
+    DECLARE v_porcentaje_desc_venta TINYINT;
+    DECLARE v_monto_desc_calculado DECIMAL(10,2);
+    DECLARE v_tasa_iva DECIMAL(5,2) DEFAULT 0.15;
 
-  SELECT COALESCE(SUM(precio_total), 0)
-  INTO total
-  FROM detalles_venta
-  WHERE venta_id = NEW.venta_id;
+    SELECT COALESCE(SUM(precio_total), 0)
+    INTO v_subtotal_sin_descuento
+    FROM detalles_venta
+    WHERE venta_id = NEW.venta_id;
 
-  UPDATE ventas
-  SET monto_total = total,
-      monto_descuento = descuento,
-      total_con_iva = (total - descuento) * (1 + iva_rate)
-  WHERE id = NEW.venta_id;
+    SELECT porcentaje_descuento
+    INTO v_porcentaje_desc_venta
+    FROM ventas
+    WHERE id = NEW.venta_id;
+
+    SET v_monto_desc_calculado = v_subtotal_sin_descuento * (v_porcentaje_desc_venta / 100);
+
+    UPDATE ventas
+    SET
+        monto_total = v_subtotal_sin_descuento,
+        monto_descuento = v_monto_desc_calculado,
+        total_con_iva = (v_subtotal_sin_descuento - v_monto_desc_calculado) * (1 + v_tasa_iva)
+    WHERE id = NEW.venta_id;
+
+    IF OLD.venta_id <> NEW.venta_id THEN
+
+        SELECT COALESCE(SUM(precio_total), 0)
+        INTO v_subtotal_sin_descuento
+        FROM detalles_venta
+        WHERE venta_id = OLD.venta_id;
+
+        SELECT porcentaje_descuento
+        INTO v_porcentaje_desc_venta
+        FROM ventas
+        WHERE id = OLD.venta_id;
+
+        SET v_monto_desc_calculado = v_subtotal_sin_descuento * (v_porcentaje_desc_venta / 100);
+
+        UPDATE ventas
+        SET
+            monto_total = v_subtotal_sin_descuento,
+            monto_descuento = v_monto_desc_calculado,
+            total_con_iva = (v_subtotal_sin_descuento - v_monto_desc_calculado) * (1 + v_tasa_iva)
+        WHERE id = OLD.venta_id;
+    END IF;
+
 END$$
 
 -- ========================================
@@ -199,4 +249,5 @@ BEGIN
   WHERE id = NEW.producto_id;
 END$$
 
-DELIMITER ;
+DELIMITER ;T=utf8mb4;
+

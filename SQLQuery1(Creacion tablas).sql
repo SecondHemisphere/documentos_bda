@@ -97,9 +97,10 @@ CREATE TABLE IF NOT EXISTS ventas (
     cliente_id BIGINT UNSIGNED NOT NULL,
     usuario_id BIGINT UNSIGNED NOT NULL,
     numero_factura VARCHAR(255) NOT NULL UNIQUE,
-    monto_total DECIMAL(10,2) NOT NULL,
+    monto_total DECIMAL(10,2) NOT NULL DEFAULT 0,
+    porcentaje_descuento TINYINT NOT NULL DEFAULT 0,
     monto_descuento DECIMAL(10,2) NOT NULL DEFAULT 0,
-    total_con_iva DECIMAL(10,2) NOT NULL,
+    total_con_iva DECIMAL(10,2) NOT NULL DEFAULT 0,
     fecha DATETIME NOT NULL,
     metodo_pago ENUM('EFECTIVO', 'TARJETA_CREDITO', 'TARJETA_DEBITO', 'TRANSFERENCIA', 'OTRO') NOT NULL DEFAULT 'EFECTIVO',
     observaciones TEXT,
@@ -112,8 +113,8 @@ CREATE TABLE IF NOT EXISTS detalles_venta (
     venta_id BIGINT UNSIGNED NOT NULL,
     producto_id BIGINT UNSIGNED NOT NULL,
     cantidad INT NOT NULL,
-    precio_unitario DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-    precio_total DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    precio_unitario DECIMAL(10,2) NOT NULL,
+    precio_total DECIMAL(10,2) NOT NULL,
     FOREIGN KEY (venta_id) REFERENCES ventas(id) ON DELETE CASCADE,
     FOREIGN KEY (producto_id) REFERENCES productos(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

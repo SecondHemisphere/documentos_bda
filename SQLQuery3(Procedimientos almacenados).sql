@@ -59,30 +59,27 @@ END$$
 
 -- ============================================
 -- 2. Registrar una nueva venta
+-- Solo recibe porcentaje_descuento; totales se calculan por triggers
 -- ============================================
 CREATE PROCEDURE sp_registrar_venta (
   IN p_cliente_id BIGINT,
   IN p_usuario_id BIGINT,
   IN p_numero_factura VARCHAR(255),
-  IN p_monto_total DECIMAL(10,2),
-  IN p_descuento DECIMAL(10,2),
-  IN p_total_con_iva DECIMAL(10,2),
+  IN p_porcentaje_descuento DECIMAL(4,2),
   IN p_fecha DATETIME
 )
 BEGIN
   INSERT INTO ventas (
-    cliente_id, usuario_id, numero_factura,
-    monto_total, monto_descuento, total_con_iva, fecha
+    cliente_id, usuario_id, numero_factura, porcentaje_descuento, fecha
   ) VALUES (
-    p_cliente_id, p_usuario_id, p_numero_factura,
-    p_monto_total, p_descuento, p_total_con_iva, p_fecha
+    p_cliente_id, p_usuario_id, p_numero_factura, p_porcentaje_descuento, p_fecha
   );
 END$$
 
 -- ============================================
 -- 3. Insertar detalle de una venta
+-- El trigger asociado disminuirá automáticamente el stock del producto y actualizará totales
 -- ============================================
--- El trigger asociado disminuirá automáticamente el stock del producto
 CREATE PROCEDURE sp_insertar_detalle_venta (
   IN p_venta_id BIGINT,
   IN p_producto_id BIGINT,
@@ -102,8 +99,8 @@ END$$
 
 -- ============================================
 -- 4. Registrar una compra
--- ============================================
 -- El trigger asociado aumentará automáticamente el stock del producto
+-- ============================================
 CREATE PROCEDURE sp_registrar_compra (
   IN p_producto_id BIGINT,
   IN p_monto_total DECIMAL(10,2),
