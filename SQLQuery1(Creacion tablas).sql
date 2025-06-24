@@ -112,8 +112,8 @@ CREATE TABLE IF NOT EXISTS detalles_venta (
     venta_id BIGINT UNSIGNED NOT NULL,
     producto_id BIGINT UNSIGNED NOT NULL,
     cantidad INT NOT NULL,
-    precio_unitario DECIMAL(10,2) NOT NULL,
-    precio_total DECIMAL(10,2) NOT NULL,
+    precio_unitario DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    precio_total DECIMAL(10,2) NOT NULL DEFAULT 0.00,
     FOREIGN KEY (venta_id) REFERENCES ventas(id) ON DELETE CASCADE,
     FOREIGN KEY (producto_id) REFERENCES productos(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

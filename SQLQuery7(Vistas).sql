@@ -134,13 +134,14 @@ SELECT
     'ENTRADA' AS tipo_movimiento,
     c.fecha_transaccion AS fecha,
     c.cantidad,
-    (c.monto_total / c.cantidad) AS precio_unitario,
-    c.monto_total AS precio_total,
-    pr.nombre AS proveedor_cliente,
-    NULL AS usuario_id,
-    NULL AS usuario_nombre
+	ROUND(c.monto_total / c.cantidad, 2) AS precio_unitario,
+    ROUND(c.monto_total, 2) AS precio_total,
+    pr.nombre AS relacionado,
+    c.usuario_id,
+    u.nombre AS usuario_nombre
 FROM compras c
 JOIN productos p ON p.id = c.producto_id
+JOIN usuarios u ON c.usuario_id = u.id
 LEFT JOIN proveedores pr ON p.proveedor_id = pr.id
 
 UNION ALL
@@ -151,9 +152,9 @@ SELECT
     'SALIDA' AS tipo_movimiento,
     v.fecha AS fecha,
     dv.cantidad,
-    dv.precio_unitario,
-    dv.precio_total,
-    cl.nombre AS proveedor_cliente,
+	ROUND(dv.precio_unitario, 2) AS precio_unitario,
+    ROUND(dv.precio_total, 2) AS precio_total,
+    cl.nombre AS relacionado,
     v.usuario_id,
     u.nombre AS usuario_nombre
 FROM detalles_venta dv

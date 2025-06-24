@@ -1,8 +1,47 @@
+USE stockmate;
+
+DROP TRIGGER IF EXISTS trg_reducir_stock_venta;
+DROP TRIGGER IF EXISTS trg_restaurar_stock_venta;
+DROP TRIGGER IF EXISTS trg_actualizar_stock_venta;
+DROP TRIGGER IF EXISTS trg_prevenir_stock_negativo;
+DROP TRIGGER IF EXISTS trg_calcular_precios_detalle_venta_before_insert;
+DROP TRIGGER IF EXISTS trg_calcular_precios_detalle_venta_before_update;
+DROP TRIGGER IF EXISTS trg_actualizar_totales_venta_after_insert;
+DROP TRIGGER IF EXISTS trg_actualizar_totales_venta_after_delete;
+DROP TRIGGER IF EXISTS trg_actualizar_totales_venta_after_update;
+DROP TRIGGER IF EXISTS trg_aumentar_stock_compra;
+DROP TRIGGER IF EXISTS trg_disminuir_stock_eliminar_compra;
+DROP TRIGGER IF EXISTS trg_actualizar_stock_compra;
+
 DELIMITER $$
 
 -- ========================================
--- TRIGGERS PARA VENTAS
+-- TRIGGER ANTES DE INSERTAR EN detalles_venta PARA CALCULAR PRECIOS
+CREATE TRIGGER trg_calcular_precios_detalle_venta_before_insert
+BEFORE INSERT ON detalles_venta
+FOR EACH ROW
+BEGIN
+  DECLARE precio DECIMAL(10,2);
+
+  SELECT precio_venta INTO precio FROM productos WHERE id = NEW.producto_id;
+
+  SET NEW.precio_unitario = precio;
+  SET NEW.precio_total = precio * NEW.cantidad;
+END$$
+
 -- ========================================
+-- TRIGGER ANTES DE ACTUALIZAR EN detalles_venta PARA CALCULAR PRECIOS
+CREATE TRIGGER trg_calcular_precios_detalle_venta_before_update
+BEFORE UPDATE ON detalles_venta
+FOR EACH ROW
+BEGIN
+  DECLARE precio DECIMAL(10,2);
+
+  SELECT precio_venta INTO precio FROM productos WHERE id = NEW.producto_id;
+
+  SET NEW.precio_unitario = precio;
+  SET NEW.precio_total = precio * NEW.cantidad;
+END$$
 
 -- 1. Disminuir stock al registrar una venta (detalle)
 CREATE TRIGGER trg_reducir_stock_venta
@@ -121,7 +160,7 @@ BEGIN
 END$$
 
 -- ========================================
--- TRIGGERS PARA COMPRAS
+-- TRIGGERS PARA COMPRAS (tabla compras)
 -- ========================================
 
 -- 8. Aumentar stock al registrar una compra
