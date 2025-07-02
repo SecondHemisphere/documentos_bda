@@ -42,6 +42,78 @@ LEFT JOIN categorias c ON p.categoria_id = c.id
 LEFT JOIN proveedores pr ON p.proveedor_id = pr.id
 WHERE p.estado = 'ACTIVO';
 
+-- Vista: Historial completo de movimientos de productos (compras y ventas)
+CREATE OR REPLACE VIEW vw_historial_producto AS
+SELECT
+    p.id AS producto_id,
+    p.nombre AS producto_nombre,
+    'COMPRA' AS tipo_movimiento,
+    c.fecha_transaccion AS fecha,
+    c.cantidad,
+    ROUND(c.monto_total / c.cantidad, 2) AS precio_unitario,
+    ROUND(c.monto_total, 2) AS precio_total,
+    pr.nombre AS relacionado,
+    u.nombre AS usuario_nombre
+FROM compras c
+JOIN productos p ON p.id = c.producto_id
+JOIN usuarios u ON c.usuario_id = u.id
+LEFT JOIN proveedores pr ON p.proveedor_id = pr.id
+
+UNION ALL
+
+SELECT
+    p.id AS producto_id,
+    p.nombre AS producto_nombre,
+    'VENTA' AS tipo_movimiento,
+    v.fecha AS fecha,
+    dv.cantidad,
+    ROUND(dv.precio_unitario, 2) AS precio_unitario,
+    ROUND(dv.precio_total, 2) AS precio_total,
+    cl.nombre AS relacionado,
+    u.nombre AS usuario_nombre
+FROM detalles_venta dv
+JOIN productos p ON p.id = dv.producto_id
+JOIN ventas v ON v.id = dv.venta_id
+JOIN clientes cl ON v.cliente_id = cl.id
+JOIN usuarios u ON v.usuario_id = u.id;
+
+-- Vista: Movimientos de inventario detallados (entradas y salidas) con responsables
+CREATE OR REPLACE VIEW vw_movimientos_inventario AS
+SELECT
+    p.id AS producto_id,
+    p.nombre AS producto_nombre,
+    'ENTRADA' AS tipo_movimiento,
+    c.fecha_transaccion AS fecha,
+    c.cantidad,
+    ROUND(c.monto_total / c.cantidad, 2) AS precio_unitario,
+    ROUND(c.monto_total, 2) AS precio_total,
+    pr.nombre AS relacionado,
+    c.usuario_id,
+    u.nombre AS usuario_nombre
+FROM compras c
+JOIN productos p ON p.id = c.producto_id
+JOIN usuarios u ON c.usuario_id = u.id
+LEFT JOIN proveedores pr ON p.proveedor_id = pr.id
+
+UNION ALL
+
+SELECT
+    p.id AS producto_id,
+    p.nombre AS producto_nombre,
+    'SALIDA' AS tipo_movimiento,
+    v.fecha AS fecha,
+    dv.cantidad,
+    ROUND(dv.precio_unitario, 2) AS precio_unitario,
+    ROUND(dv.precio_total, 2) AS precio_total,
+    cl.nombre AS relacionado,
+    v.usuario_id,
+    u.nombre AS usuario_nombre
+FROM detalles_venta dv
+JOIN productos p ON p.id = dv.producto_id
+JOIN ventas v ON v.id = dv.venta_id
+JOIN clientes cl ON v.cliente_id = cl.id
+JOIN usuarios u ON v.usuario_id = u.id;
+
 -- =====================================
 -- GRUPO 2: VENTAS Y PRODUCTOS MÁS VENDIDOS
 -- =====================================
@@ -126,79 +198,3 @@ FROM clientes c
 JOIN ventas v ON c.id = v.cliente_id
 GROUP BY c.id, c.nombre
 ORDER BY numero_compras DESC, total_compras DESC;
-
--- =====================================
--- GRUPO 5: MOVIMIENTOS E HISTORIAL DE INVENTARIO
--- =====================================
-
--- Vista: Historial completo de movimientos de productos (compras y ventas)
-CREATE OR REPLACE VIEW vw_historial_producto AS
-SELECT
-    p.id AS producto_id,
-    p.nombre AS producto_nombre,
-    'COMPRA' AS tipo_movimiento,
-    c.fecha_transaccion AS fecha,
-    c.cantidad,
-    ROUND(c.monto_total / c.cantidad, 2) AS precio_unitario,
-    ROUND(c.monto_total, 2) AS precio_total,
-    pr.nombre AS relacionado,
-    u.nombre AS usuario_nombre
-FROM compras c
-JOIN productos p ON p.id = c.producto_id
-JOIN usuarios u ON c.usuario_id = u.id
-LEFT JOIN proveedores pr ON p.proveedor_id = pr.id
-
-UNION ALL
-
-SELECT
-    p.id AS producto_id,
-    p.nombre AS producto_nombre,
-    'VENTA' AS tipo_movimiento,
-    v.fecha AS fecha,
-    dv.cantidad,
-    ROUND(dv.precio_unitario, 2) AS precio_unitario,
-    ROUND(dv.precio_total, 2) AS precio_total,
-    cl.nombre AS relacionado,
-    u.nombre AS usuario_nombre
-FROM detalles_venta dv
-JOIN productos p ON p.id = dv.producto_id
-JOIN ventas v ON v.id = dv.venta_id
-JOIN clientes cl ON v.cliente_id = cl.id
-JOIN usuarios u ON v.usuario_id = u.id;
-
--- Vista: Movimientos de inventario detallados (entradas y salidas) con responsables
-CREATE OR REPLACE VIEW vw_movimientos_inventario AS
-SELECT
-    p.id AS producto_id,
-    p.nombre AS producto_nombre,
-    'ENTRADA' AS tipo_movimiento,
-    c.fecha_transaccion AS fecha,
-    c.cantidad,
-    ROUND(c.monto_total / c.cantidad, 2) AS precio_unitario,
-    ROUND(c.monto_total, 2) AS precio_total,
-    pr.nombre AS relacionado,
-    c.usuario_id,
-    u.nombre AS usuario_nombre
-FROM compras c
-JOIN productos p ON p.id = c.producto_id
-JOIN usuarios u ON c.usuario_id = u.id
-LEFT JOIN proveedores pr ON p.proveedor_id = pr.id
-
-UNION ALL
-
-SELECT
-    p.id AS producto_id,
-    p.nombre AS producto_nombre,
-    'SALIDA' AS tipo_movimiento,
-    v.fecha AS fecha,
-    dv.cantidad,
-    ROUND(dv.precio_unitario, 2) AS precio_unitario,
-    ROUND(dv.precio_total, 2) AS precio_total,
-    cl.nombre AS relacionado,
-    v.usuario_id,
-    u.nombre AS usuario_nombre
-FROM detalles_venta dv
-JOIN productos p ON p.id = dv.producto_id
-JOIN ventas v ON v.id = dv.venta_id
-JOIN clientes cl ON v.cliente_id = cl.id
-JOIN usuarios u ON v.usuario_id = u.id;
